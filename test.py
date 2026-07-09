@@ -214,17 +214,6 @@ if submit:
         "text/csv"
     )
 
-# ---------------- View Database ----------------
 
-st.subheader("Saved Applications")
-
-if st.button("Show All Applications"):
-
-    df = pd.read_sql_query(
-        "SELECT * FROM applications",
-        conn
-    )
-
-    st.dataframe(df)
 
 conn.close()
