@@ -10,8 +10,6 @@ cursor = conn.cursor()
 # Updated table schema to include a password field
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS applications(
-    username TEXT,
-    password TEXT,
     first_name TEXT,
     last_name TEXT,
     gender TEXT,
@@ -44,11 +42,6 @@ st.write("Please fill in the details below to apply for an IT job.")
 with st.form("job_registration_form"):
 
     st.subheader("Personal Information")
-
-    username = st.text_input("Username")
-    # Added type="password" to mask the input for privacy
-    password = st.text_input("Password", type="password", help="Create a secure password")
-    
     first_name = st.text_input("First Name")
     last_name = st.text_input("Last Name")
 
@@ -164,10 +157,8 @@ if submit:
         (username, password, first_name, last_name, gender, dob, phone, email,
         address, qualification, college, graduation_year, cgpa,
         job_role, experience, skills, expected_salary)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
-            username,
-            password, # Stored in the database
             first_name,
             last_name,
             gender,
@@ -189,7 +180,6 @@ if submit:
 
         # Excluded password from the summary display data dictionary for privacy
         data = {
-            "Username": username,
             "First Name": first_name,
             "Last Name": last_name,
             "Gender": gender,
