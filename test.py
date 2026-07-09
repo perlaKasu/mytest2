@@ -42,6 +42,7 @@ st.write("Please fill in the details below to apply for an IT job.")
 with st.form("job_registration_form"):
 
     st.subheader("Personal Information")
+
     first_name = st.text_input("First Name")
     last_name = st.text_input("Last Name")
 
@@ -147,14 +148,14 @@ with st.form("job_registration_form"):
 # ---------------- Submit Action ----------------
 
 if submit:
-    if not username or not password:
-        st.error("❌ Username and Password are required!")
+    if not first_name or not last_name:
+        st.error("❌ First Name and Last Name are required!")
     else:
         skills_str = ", ".join(skills)
 
         cursor.execute("""
         INSERT INTO applications
-        (username, password, first_name, last_name, gender, dob, phone, email,
+        (first_name, last_name, gender, dob, phone, email,
         address, qualification, college, graduation_year, cgpa,
         job_role, experience, skills, expected_salary)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -221,10 +222,10 @@ st.subheader("🔒 Admin Access: Saved Applications")
 admin_password_input = st.text_input("Enter Admin Password to view details", type="password")
 
 if st.button("Show All Applications"):
-    # Replace 'admin123' with your preferred secure password
+    
     if admin_password_input == "l23cse207":
         df = pd.read_sql_query(
-            "SELECT username, first_name, last_name, gender, dob, phone, email, address, qualification, college, graduation_year, cgpa, job_role, experience, skills, expected_salary FROM applications",
+            "SELECT first_name, last_name, gender, dob, phone, email, address, qualification, college, graduation_year, cgpa, job_role, experience, skills, expected_salary FROM applications",
             conn
         )
         
