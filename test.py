@@ -7,9 +7,11 @@ import sqlite3
 conn = sqlite3.connect("job.db")
 cursor = conn.cursor()
 
+# Updated table schema to include a password field
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS applications(
     username TEXT,
+    password TEXT,
     first_name TEXT,
     last_name TEXT,
     gender TEXT,
@@ -44,6 +46,9 @@ with st.form("job_registration_form"):
     st.subheader("Personal Information")
 
     username = st.text_input("Username")
+    # Added type="password" to mask the input for privacy
+    password = st.text_input("Password", type="password", help="Create a secure password")
+    
     first_name = st.text_input("First Name")
     last_name = st.text_input("Last Name")
 
@@ -146,74 +151,98 @@ with st.form("job_registration_form"):
 
     submit = st.form_submit_button("Submit Application")
 
-# ---------------- Submit ----------------
+# ---------------- Submit Action ----------------
 
 if submit:
+    if not username or not password:
+        st.error("❌ Username and Password are required!")
+    else:
+        skills_str = ", ".join(skills)
 
-    skills_str = ", ".join(skills)
+        cursor.execute("""
+        INSERT INTO applications
+        (username, password, first_name, last_name, gender, dob, phone, email,
+        address, qualification, college, graduation_year, cgpa,
+        job_role, experience, skills, expected_salary)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            username,
+            password, # Stored in the database
+            first_name,
+            last_name,
+            gender,
+            str(dob),
+            phone,
+            email,
+            address,
+            qualification,
+            college,
+            graduation_year,
+            cgpa,
+            job_role,
+            experience,
+            skills_str,
+            expected_salary
+        ))
 
-    cursor.execute("""
-    INSERT INTO applications
-    (username, first_name, last_name, gender, dob, phone, email,
-    address, qualification, college, graduation_year, cgpa,
-    job_role, experience, skills, expected_salary)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, (
-        username,
-        first_name,
-        last_name,
-        gender,
-        str(dob),
-        phone,
-        email,
-        address,
-        qualification,
-        college,
-        graduation_year,
-        cgpa,
-        job_role,
-        experience,
-        skills_str,
-        expected_salary
-    ))
+        conn.commit()
 
-    conn.commit()
+        # Excluded password from the summary display data dictionary for privacy
+        data = {
+            "Username": username,
+            "First Name": first_name,
+            "Last Name": last_name,
+            "Gender": gender,
+            "DOB": str(dob),
+            "Phone": phone,
+            "Email": email,
+            "Address": address,
+            "Qualification": qualification,
+            "College": college,
+            "Graduation Year": graduation_year,
+            "CGPA": cgpa,
+            "Job Role": job_role,
+            "Experience": experience,
+            "Skills": skills_str,
+            "Expected Salary": expected_salary
+        }
 
-    data = {
-        "Username": username,
-        "First Name": first_name,
-        "Last Name": last_name,
-        "Gender": gender,
-        "DOB": str(dob),
-        "Phone": phone,
-        "Email": email,
-        "Address": address,
-        "Qualification": qualification,
-        "College": college,
-        "Graduation Year": graduation_year,
-        "CGPA": cgpa,
-        "Job Role": job_role,
-        "Experience": experience,
-        "Skills": skills_str,
-        "Expected Salary": expected_salary
-    }
+        st.success("✅ Application Submitted Successfully!")
 
-    st.success("✅ Application Submitted Successfully!")
+        st.subheader("Submitted Details")
+        st.json(data)
 
-    st.subheader("Submitted Details")
-    st.json(data)
+        df = pd.DataFrame([data])
+        csv = df.to_csv(index=False).encode("utf-8")
 
-    df = pd.DataFrame([data])
+        st.download_button(
+            "📥 Download Application",
+            csv,
+            "job_application.csv",
+            "text/csv"
+        )
 
-    csv = df.to_csv(index=False).encode("utf-8")
+# ---------------- Admin View Database Section ----------------
 
-    st.download_button(
-        "📥 Download Application",
-        csv,
-        "job_application.csv",
-        "text/csv"
-    )
+st.markdown("---")
+st.subheader("🔒 Admin Access: Saved Applications")
 
+# Privacy Feature: Masked password verification field to see the database
+admin_password_input = st.text_input("Enter Admin Password to view details", type="password")
 
+if st.button("Show All Applications"):
+    # Replace 'admin123' with your preferred secure password
+    if admin_password_input == "l23cse207":
+        df = pd.read_sql_query(
+            "SELECT username, first_name, last_name, gender, dob, phone, email, address, qualification, college, graduation_year, cgpa, job_role, experience, skills, expected_salary FROM applications",
+            conn
+        )
+        
+        if not df.empty:
+            st.dataframe(df)
+        else:
+            st.info("No applications found in the database.")
+    else:
+        st.error("❌ Invalid Admin Password. Access Denied.")
 
 conn.close()
